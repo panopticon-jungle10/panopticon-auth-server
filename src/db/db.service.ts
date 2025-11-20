@@ -9,7 +9,37 @@ export class DbService implements OnModuleDestroy, OnModuleInit {
   constructor() {
     const connectionString = process.env.DATABASE_URL;
     if (!connectionString) throw new InternalServerErrorException('DATABASE_URL is not set');
-    this.pool = new Pool({ connectionString });
+
+    const pgSslEnv = (process.env.PG_SSL || 'true').toLowerCase();
+    const useSsl = pgSslEnv !== 'false';
+
+    const caEnv = process.env.PG_SSL_CA;
+    let sslOption: any = false;
+    if (useSsl) {
+      if (caEnv) {
+        let caPem: string;
+        if (caEnv.trim().startsWith('-----BEGIN')) {
+          caPem = caEnv;
+        } else {
+          try {
+            caPem = Buffer.from(caEnv, 'base64').toString('utf-8');
+          } catch (err) {
+            this.logger.warn('Failed to decode PG_SSL_CA as base64; treating as raw PEM');
+            caPem = caEnv;
+          }
+        }
+
+        sslOption = { ca: caPem, rejectUnauthorized: true };
+      } else {
+        const rejEnv = (process.env.PG_SSL_REJECT_UNAUTHORIZED || 'true').toLowerCase();
+        const rejectUnauthorized = !(rejEnv === '0' || rejEnv === 'false' || rejEnv === 'no');
+        sslOption = { rejectUnauthorized };
+      }
+    }
+
+    this.logger.log(`PG_SSL=${process.env.PG_SSL || 'undefined'} PG_SSL_REJECT_UNAUTHORIZED=${process.env.PG_SSL_REJECT_UNAUTHORIZED || 'undefined'} PG_SSL_CA=${caEnv ? 'present' : 'absent'} sslOption=${JSON.stringify({...(sslOption || {})})}`);
+
+    this.pool = new Pool({ connectionString, ssl: sslOption });
   }
 
   // Ensure required tables exist when module initializes
