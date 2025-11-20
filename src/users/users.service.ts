@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 
 @Injectable()
@@ -8,7 +8,8 @@ export class UsersService {
   async upsert(payload: any) {
     const { provider, github_id, google_id, login, email, avatar_url } = payload;
 
-    if (provider === 'github' && github_id) {
+    try {
+      if (provider === 'github' && github_id) {
       const sql = `INSERT INTO users (github_id, login, email, avatar_url, provider)
         VALUES ($1,$2,$3,$4,$5)
         ON CONFLICT (github_id) DO UPDATE SET
@@ -22,7 +23,7 @@ export class UsersService {
       return result.rows[0];
     }
 
-    if (provider === 'google' && google_id) {
+      if (provider === 'google' && google_id) {
       const sql = `INSERT INTO users (google_id, login, email, avatar_url, provider)
         VALUES ($1,$2,$3,$4,$5)
         ON CONFLICT (google_id) DO UPDATE SET
@@ -36,7 +37,7 @@ export class UsersService {
       return result.rows[0];
     }
 
-    if (email) {
+      if (email) {
       const sql = `INSERT INTO users (email, login, avatar_url, provider)
         VALUES ($1,$2,$3,$4)
         ON CONFLICT (email) DO UPDATE SET
@@ -48,8 +49,12 @@ export class UsersService {
       const result = await this.db.query(sql, [email, login || null, avatar_url || null, provider]);
       return result.rows[0];
     }
+    } catch (err: any) {
+      // map DB errors to a 500-level error
+      throw new InternalServerErrorException(err?.message || 'Database error while upserting user');
+    }
 
-    throw new Error('insufficient identifiers');
+    throw new BadRequestException('insufficient identifiers');
   }
 }
 

@@ -1,4 +1,4 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, InternalServerErrorException } from '@nestjs/common';
 import { Pool } from 'pg';
 
 @Injectable()
@@ -7,15 +7,23 @@ export class DbService implements OnModuleDestroy {
 
   constructor() {
     const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) throw new Error('DATABASE_URL is not set');
+    if (!connectionString) throw new InternalServerErrorException('DATABASE_URL is not set');
     this.pool = new Pool({ connectionString });
   }
 
-  query(text: string, params?: any[]) {
-    return this.pool.query(text, params);
+  async query(text: string, params?: any[]) {
+    try {
+      return await this.pool.query(text, params);
+    } catch (err: any) {
+      throw new InternalServerErrorException(err?.message || 'Database query failed');
+    }
   }
 
   async onModuleDestroy() {
-    await this.pool.end();
+    try {
+      await this.pool.end();
+    } catch (err) {
+      // ignore
+    }
   }
 }
