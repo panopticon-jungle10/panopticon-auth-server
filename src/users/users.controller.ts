@@ -31,4 +31,9 @@ export class HealthController {
   health() {
     return { status: 'ok', service: 'panopticon-auth-server' };
   }
+
+  @Get('auth/health')
+  authHealth() {
+    return this.health();
+  }
 }
