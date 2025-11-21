@@ -2,12 +2,16 @@ import { Controller, Post, Body, Headers, UnauthorizedException, Get, BadRequest
 import { UsersService } from './users.service';
 import { JwtService } from '../jwt/jwt.service';
 import { UpsertUserDto } from './dto/upsert-user.dto';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('users')
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService, private jwtService: JwtService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Upsert user (requires Authorization Bearer token)' })
+  @ApiBearerAuth('jwt')
   async upsertUser(@Body() body: UpsertUserDto, @Headers('authorization') auth?: string) {
     if (!auth || !auth.startsWith('Bearer ')) throw new UnauthorizedException('Missing Authorization');
     const token = auth.replace(/^Bearer /, '');

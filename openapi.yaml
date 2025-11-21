@@ -1,0 +1,51 @@
+openapi: 3.0.3
+info:
+  title: Panopticon Auth API
+  version: 0.1.0
+  description: Authentication and user management for Panopticon
+servers:
+  - url: http://localhost:8080
+paths:
+  /auth/github/callback:
+    get:
+      summary: GitHub OAuth callback
+      parameters:
+        - in: query
+          name: code
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: JWT and user object
+  /auth/google/callback:
+    get:
+      summary: Google OAuth callback
+      parameters:
+        - in: query
+          name: code
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: JWT and user object
+  /users:
+    post:
+      summary: Upsert user (protected)
+      security:
+        - jwt: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: user upserted
+components:
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

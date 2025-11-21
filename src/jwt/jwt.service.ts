@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { jwtVerify } from 'jose';
+import { jwtVerify, SignJWT } from 'jose';
 
 const getSecretKey = (): Uint8Array => {
   const secret = process.env.JWT_SECRET;
@@ -18,5 +18,16 @@ export class JwtService {
       console.error('JWT verify failed', err);
       return { valid: false };
     }
+  }
+
+  async sign(payload: Record<string, any>, expiresInSeconds = 60 * 60 * 24) {
+    const secret = getSecretKey();
+    const now = Math.floor(Date.now() / 1000);
+    const token = await new SignJWT({ ...payload })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt(now)
+      .setExpirationTime(now + expiresInSeconds)
+      .sign(secret);
+    return token;
   }
 }
