@@ -149,37 +149,7 @@ with open("task-definition.json","w") as f: json.dump(td,f,indent=2); print("Inj
         task-definition: ${{ steps.task-def.outputs.task-definition }}
         service: ${{ env.ECS_SERVICE }}
         cluster: ${{ env.ECS_CLUSTER }}
-        wait-for-service-stability: false
+      ### Archived: CI/CD workflow removed
 
-    - name: Wait for ALB target to be healthy (longer wait + diagnostic)
-      env:
-        CLUSTER: ${{ env.ECS_CLUSTER }}
-        SERVICE: ${{ env.ECS_SERVICE }}
-        AWS_REGION: ${{ env.AWS_REGION }}
-      run: |
-        set -euo pipefail
-        echo "Waiting for ALB target to become healthy..."
-        TG_ARN=$(aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" --region "$AWS_REGION" --query 'services[0].loadBalancers[0].targetGroupArn' --output text)
-        if [ -z "$TG_ARN" ] || [ "$TG_ARN" = "None" ]; then
-          echo "No target group found for service $SERVICE. Exiting."
-          exit 1
-        fi
-
-        MAX_RETRIES=40 # ~20 minutes (40 * 30s)
-        RETRY=0
-        while [ $RETRY -lt $MAX_RETRIES ]; do
-          UNHEALTHY_COUNT=$(aws elbv2 describe-target-health --target-group-arn "$TG_ARN" --region "$AWS_REGION" --query 'length(TargetHealthDescriptions[?TargetHealth.State!=`healthy`])' --output text)
-          echo "Attempt $RETRY/$MAX_RETRIES — Unhealthy targets: $UNHEALTHY_COUNT"
-          if [ "$UNHEALTHY_COUNT" = "0" ]; then
-            echo "All targets healthy — success"
-            exit 0
-          fi
-          sleep 30
-          RETRY=$((RETRY + 1))
-        done
-
-        echo "Timed out waiting for ALB targets to become healthy" >&2
-        # print some diagnostics
-        aws ecs describe-services --cluster "$CLUSTER" --services "$SERVICE" --region "$AWS_REGION" --output json | jq -r '.' || true
-        aws elbv2 describe-target-health --target-group-arn "$TG_ARN" --region "$AWS_REGION" --output json | jq -r '.' || true
-        exit 1
+      # This file was intentionally removed to prefer manual, console-based deployment.
+      # If you need to restore automated deployments later, see panopticon-original/workflows for reference.
