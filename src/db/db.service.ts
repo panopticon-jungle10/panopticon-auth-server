@@ -10,9 +10,15 @@ export class DbService implements OnModuleDestroy, OnModuleInit {
     const connectionString = process.env.DATABASE_URL;
     if (!connectionString) throw new InternalServerErrorException('DATABASE_URL is not set');
 
-    // RDS SSL has been disabled for this deployment; use plain TCP connection.
-    this.logger.log('DB SSL is disabled; connecting without SSL to RDS');
-    this.pool = new Pool({ connectionString, ssl: false });
+    const enableSslEnv = (process.env.DB_ENABLE_SSL || '').toLowerCase() === 'true';
+    const urlRequestsSsl = /sslmode= *require/i.test(connectionString);
+    if (enableSslEnv || urlRequestsSsl) {
+      this.logger.log('DB SSL is enabled; connecting to RDS using TLS (rejectUnauthorized=false)');
+      this.pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
+    } else {
+      this.logger.log('DB SSL is disabled; connecting without SSL to RDS');
+      this.pool = new Pool({ connectionString, ssl: false });
+    }
   }
 
   // Ensure required tables exist when module initializes
