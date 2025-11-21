@@ -34,15 +34,6 @@
           "name": "PORT",
           "value": "8080"
         }
-        ,
-        {
-          "name": "PG_SSL",
-          "value": "true"
-        },
-        {
-          "name": "PG_SSL_REJECT_UNAUTHORIZED",
-          "value": "true"
-        }
       ],
       "secrets": [
         {
@@ -52,10 +43,6 @@
         {
           "name": "JWT_SECRET",
           "valueFrom": "arn:aws:ssm:ap-northeast-2:338952532870:parameter/panopticon/jwt_secret"
-        },
-        {
-          "name": "PG_SSL_CA",
-          "valueFrom": "arn:aws:ssm:ap-northeast-2:338952532870:parameter/panopticon/pg_ssl_ca"
         }
       ],
       "mountPoints": [],
