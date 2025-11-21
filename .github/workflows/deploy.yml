@@ -101,6 +101,67 @@ jobs:
           --task-definition ${{ env.ECS_TASK_DEFINITION }} \
           --query taskDefinition > task-definition.json
 
+    - name: Prefer repo task-definition if present
+      run: |
+        # If the repository has a committed task-definition.json, restore it
+        # (the previous step downloads the live AWS task definition and overwrites
+        # any repo file with the same name). Restoring ensures local changes
+        # (for example removing PG_SSL) are used for rendering/deploy.
+        if git ls-files --error-unmatch task-definition.json >/dev/null 2>&1; then
+          echo "Found committed repo task-definition.json — restoring local copy"
+          git checkout -- task-definition.json
+        else
+          echo "No repo task-definition.json committed — using downloaded definition"
+        fi
+
+    - name: Inject GitHub Secrets into task definition (replace secrets)
+      env:
+        SECRET_DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        SECRET_JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        SECRET_NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+        SECRET_NODE_ENV: ${{ secrets.NODE_ENV }}
+        SECRET_PORT: ${{ secrets.PORT }}
+      run: |
+        set -euo pipefail
+        if command -v python3 >/dev/null 2>&1; then
+          python3 - <<'PY'
+import json,os
+def collect():
+    res={}
+    for k,v in os.environ.items():
+        if not k.startswith('SECRET_'): continue
+        name=k[len('SECRET_'):]
+        if v is None or v=='' or v=='null':
+            continue
+        res[name]=v
+    return res
+
+env = collect()
+if not env:
+    print('No GitHub Secrets provided (or they are empty). Leaving task-definition.json as-is')
+    raise SystemExit(0)
+
+with open('task-definition.json') as f:
+    td = json.load(f)
+# If the downloaded file contains a wrapper 'taskDefinition', unwrap it
+if 'taskDefinition' in td and isinstance(td['taskDefinition'], dict):
+    td = td['taskDefinition']
+
+for c in td.get('containerDefinitions', []):
+    existing = {e['name']: e.get('value','') for e in c.get('environment', [])}
+    existing.update(env)
+    c['environment'] = [{'name':k,'value':v} for k,v in existing.items()]
+    if 'secrets' in c:
+        del c['secrets']
+
+with open('task-definition.json','w') as f:
+    json.dump(td, f, indent=2)
+print('Injected GitHub Secrets into task-definition.json')
+PY
+        else
+          echo "python3 is required to inject GitHub Secrets; skipping injection step" >&2
+        fi
+
     - name: Debug Render Inputs
       run: |
         echo "Render input image: ${{ needs.build.outputs.image }}"
