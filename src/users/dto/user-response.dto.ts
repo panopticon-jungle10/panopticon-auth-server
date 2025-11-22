@@ -1,11 +1,33 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export class UserResponseDto {
-  id?: number;
-  github_id?: string | null;
-  google_id?: string | null;
-  login?: string | null;
-  email?: string | null;
-  avatar_url?: string | null;
-  provider?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  email!: string;
+
+  @ApiProperty({ required: false })
+  displayName?: string;
+
+  @ApiProperty()
+  avatarUrl!: string;
+
+  @ApiProperty()
+  emailVerified!: boolean;
+
+  @ApiProperty()
+  role!: string;
+
+  @ApiProperty({ required: false })
+  provider?: string;
+
+  @ApiProperty({ required: false })
+  lastLoginAt?: Date;
+
+  @ApiProperty()
+  createdAt!: Date;
+
+  @ApiProperty()
+  updatedAt!: Date;
 }
