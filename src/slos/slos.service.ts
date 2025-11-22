@@ -43,7 +43,7 @@ export class SlosService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return Promise.all(slos.map(slo => this.mapToResponseDtoWithWebhooks(slo)));
+    return Promise.all(slos.map((slo: any) => this.mapToResponseDtoWithWebhooks(slo)));
   }
 
   async findOne(userId: string, sloId: string): Promise<SloResponseDto> {

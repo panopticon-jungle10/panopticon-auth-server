@@ -49,7 +49,7 @@ export class WebhooksService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return webhooks.map(webhook => this.mapToResponseDto(webhook));
+    return webhooks.map((webhook: any) => this.mapToResponseDto(webhook));
   }
 
   async findOne(userId: string, webhookId: string): Promise<WebhookResponseDto> {
