@@ -13,6 +13,37 @@ export class AuthController {
 
   constructor(private usersService: UsersService, private jwtService: JwtService) {}
 
+  @ApiOperation({ summary: 'GitHub OAuth authorization endpoint' })
+  @ApiResponse({ status: 302, description: 'Redirects to GitHub authorization page' })
+  @Get('github')
+  githubAuth(@Res() res: Response) {
+    const clientId = process.env.GITHUB_CLIENT_ID;
+    const redirectUri = process.env.GITHUB_REDIRECT_URI;
+    if (!clientId || !redirectUri) throw new BadRequestException('GitHub OAuth not configured');
+
+    const url = new URL('https://github.com/login/oauth/authorize');
+    url.searchParams.set('client_id', clientId);
+    url.searchParams.set('redirect_uri', redirectUri);
+    url.searchParams.set('scope', 'read:user user:email');
+    return res.redirect(url.toString());
+  }
+
+  @ApiOperation({ summary: 'Google OAuth authorization endpoint' })
+  @ApiResponse({ status: 302, description: 'Redirects to Google authorization page' })
+  @Get('google')
+  googleAuth(@Res() res: Response) {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+    if (!clientId || !redirectUri) throw new BadRequestException('Google OAuth not configured');
+
+    const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    url.searchParams.set('client_id', clientId);
+    url.searchParams.set('redirect_uri', redirectUri);
+    url.searchParams.set('scope', 'openid profile email');
+    url.searchParams.set('response_type', 'code');
+    return res.redirect(url.toString());
+  }
+
   @ApiOperation({ summary: 'GitHub OAuth callback' })
   @ApiQuery({ name: 'code', required: true })
   @ApiResponse({ status: 200, description: 'Returns JWT and user', type: AuthResponseDto })
@@ -69,7 +100,10 @@ export class AuthController {
     const { refreshToken, expiresAt } = await this.usersService.createSession(user.id, undefined, req.ip, req.headers['user-agent'] as string | undefined);
     res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', expires: expiresAt });
     const token = await this.jwtService.sign({ sub: user.id, email: user.email });
-    return { token, user };
+
+    // Set auth-token cookie and redirect to frontend
+    res.cookie('auth-token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 });
+    return res.redirect(`${process.env.FRONTEND_URL || 'https://jungle-panopticon.cloud'}/services`);
   }
 
   @ApiOperation({ summary: 'Google OAuth callback' })
@@ -115,7 +149,10 @@ export class AuthController {
     const { refreshToken, expiresAt } = await this.usersService.createSession(user.id, undefined, req.ip, req.headers['user-agent'] as string | undefined);
     res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', expires: expiresAt });
     const token = await this.jwtService.sign({ sub: user.id, email: user.email });
-    return { token, user };
+
+    // Set auth-token cookie and redirect to frontend
+    res.cookie('auth-token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 });
+    return res.redirect(`${process.env.FRONTEND_URL || 'https://jungle-panopticon.cloud'}/services`);
   }
 
   @ApiOperation({ summary: 'Generic OAuth callback (POST) for frontends' })
