@@ -18,7 +18,7 @@ import { UpdateSloDto } from './dto/update-slo.dto';
 import { SloResponseDto } from './dto/slo-response.dto';
 
 @ApiTags('slos')
-@Controller('api/slos')
+@Controller('auth/slos')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('jwt')
 export class SlosController {

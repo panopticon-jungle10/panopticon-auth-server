@@ -17,7 +17,7 @@ import { UpdateWebhookDto } from './dto/update-webhook.dto';
 import { WebhookResponseDto } from './dto/webhook-response.dto';
 
 @ApiTags('webhooks')
-@Controller('api/webhooks')
+@Controller('auth/webhooks')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('jwt')
 export class WebhooksController {
