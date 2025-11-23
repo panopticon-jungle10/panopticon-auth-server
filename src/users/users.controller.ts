@@ -45,6 +45,21 @@ export class UsersController {
     }
   }
 
+  @Post('oauth')
+  @ApiOperation({ summary: 'Upsert user via OAuth (no authentication required)' })
+  @ApiResponse({ status: 200, description: 'User upserted and JWT token returned', type: UpsertResponseDto })
+  async oauthUpsertUser(@Body() body: UpsertUserDto) {
+    try {
+      const user = await this.usersService.upsert(body);
+      const jwtToken = await this.jwtService.sign({ sub: user.id });
+      return { success: true, user, token: jwtToken };
+    } catch (err: any) {
+      // UsersService throws BadRequestException for client errors
+      if (err instanceof BadRequestException) throw err;
+      throw new BadRequestException(err?.message || 'Failed to upsert user');
+    }
+  }
+
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('jwt')

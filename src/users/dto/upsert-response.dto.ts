@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserResponseDto } from './user-response.dto';
 
 export class UpsertResponseDto {
@@ -7,4 +7,7 @@ export class UpsertResponseDto {
 
   @ApiProperty({ type: () => UserResponseDto })
   user!: UserResponseDto;
+
+  @ApiPropertyOptional({ description: 'JWT token for OAuth authentication' })
+  token?: string;
 }
