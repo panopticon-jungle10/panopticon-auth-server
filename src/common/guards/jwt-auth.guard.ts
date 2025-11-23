@@ -7,13 +7,23 @@ export class JwtAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const authHeader = request.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Missing or invalid Authorization header');
+    // Try to get token from Authorization header first
+    let token = null;
+    const authHeader = request.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.replace(/^Bearer /, '');
     }
 
-    const token = authHeader.replace(/^Bearer /, '');
+    // If not in header, try to get from cookies
+    if (!token && request.cookies) {
+      token = request.cookies['auth-token'];
+    }
+
+    if (!token) {
+      throw new UnauthorizedException('Missing authentication token');
+    }
+
     const { valid, payload } = await this.jwtService.verify(token);
 
     if (!valid || !payload) {
