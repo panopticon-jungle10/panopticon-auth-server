@@ -101,8 +101,8 @@ export class AuthController {
     res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', expires: expiresAt });
     const token = await this.jwtService.sign({ sub: user.id, email: user.email });
 
-    // Set auth-token cookie and redirect to frontend
-    res.cookie('auth-token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 });
+    // Set auth-token cookie (maxAge expects milliseconds)
+    res.cookie('auth-token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
     return res.redirect(`${process.env.FRONTEND_URL || 'https://jungle-panopticon.cloud'}/services`);
   }
 
@@ -150,8 +150,8 @@ export class AuthController {
     res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', expires: expiresAt });
     const token = await this.jwtService.sign({ sub: user.id, email: user.email });
 
-    // Set auth-token cookie and redirect to frontend
-    res.cookie('auth-token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 });
+    // Set auth-token cookie (maxAge expects milliseconds)
+    res.cookie('auth-token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
     return res.redirect(`${process.env.FRONTEND_URL || 'https://jungle-panopticon.cloud'}/services`);
   }
 
@@ -188,6 +188,9 @@ export class AuthController {
       res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', expires: expiresAt });
       const token = await this.jwtService.sign({ sub: user.id, email: user.email });
 
+      // Also set auth-token cookie so frontends using cookie-based auth receive it
+      res.cookie('auth-token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
+
       this.logger.log(`[OAUTH_CALLBACK] Successfully completed OAuth flow for user ${user.id}`);
       return { token, user };
     } catch (err: any) {
@@ -209,6 +212,8 @@ export class AuthController {
     // set rotated refresh token as cookie
     res.cookie('refreshToken', newRefreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', expires: expiresAt });
     const token = await this.jwtService.sign({ sub: user.id, email: user.email });
+    // Set auth-token cookie so client with credentials='include' gets updated token
+    res.cookie('auth-token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 7 });
     return { token, user };
   }
 
