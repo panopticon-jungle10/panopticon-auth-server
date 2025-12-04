@@ -67,7 +67,7 @@ GITHUB_CLIENT_SECRET=...
 | [PRD](./docs/PRD.md) | 제품 요구사항 문서 |
 | [Architecture](./docs/ARCHITECTURE.md) | 시스템 아키텍처 |
 | [Development Guidelines](./ORGANIZATION_RULES.md) | 개발 가이드 및 컨벤션 |
-| [PostgreSQL Setup](./POSTGRES_DOC.md) | 데이터베이스 설정 가이드 |
+| [Database Guide](./docs/DATABASE_GUIDE.md) | 데이터베이스 운영 가이드 |
 
 ---
 

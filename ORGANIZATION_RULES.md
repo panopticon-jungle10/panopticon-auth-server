@@ -75,7 +75,7 @@ FRONTEND_URL=http://localhost:3000
 
 ### 3.1 PostgreSQL with Docker
 
-> PostgreSQL Docker 상세 명령어는 [POSTGRES_DOC.md](./POSTGRES_DOC.md) 참조
+> PostgreSQL 상세 가이드는 [DATABASE_GUIDE.md](./docs/DATABASE_GUIDE.md) 참조
 
 ```bash
 # PostgreSQL 컨테이너 실행 (예시)
@@ -335,4 +335,4 @@ docker ps  # PostgreSQL 컨테이너 확인
 - [NestJS Documentation](https://docs.nestjs.com/)
 - [Prisma Documentation](https://www.prisma.io/docs/)
 - [jose JWT Library](https://github.com/panva/jose)
-- [PostgreSQL Docker Setup](./POSTGRES_DOC.md)
+- [Database Guide](./docs/DATABASE_GUIDE.md)
